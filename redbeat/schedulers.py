@@ -132,6 +132,7 @@ class RedBeatSchedulerEntry(ScheduleEntry):
     def load_definition(key, app=None, definition=None):
         if definition is None:
             definition = redis(app).hget(key, 'definition')
+            logger.debug('load_definition[%s]: %s', key, definition)
 
         if not definition:
             raise KeyError(key)
@@ -169,6 +170,8 @@ class RedBeatSchedulerEntry(ScheduleEntry):
         definition = cls.decode_definition(definition)
         meta = cls.decode_meta(meta)
         definition.update(meta)
+
+        logger.debug('definition[%s]: %s', key, definition)
 
         entry = cls(app=app, **definition)
         # celery.ScheduleEntry sets last_run_at = utcnow(), which is confusing and wrong
@@ -331,6 +334,7 @@ class RedBeatScheduler(Scheduler):
         logger.debug('Selecting tasks')
 
         max_due_at = to_timestamp(self.app.now())
+        logger.debug('max_due_at %s', max_due_at)
         client = redis(self.app)
 
         with client.pipeline() as pipe:
